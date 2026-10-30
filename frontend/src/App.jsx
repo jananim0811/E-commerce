@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Auth from "./Auth.jsx";
 import "./style.css";
+import Checkout from "./Checkout";
+import MyOrders from "./MyOrders";
 
 const API = "http://localhost:5000/api";
 
@@ -17,6 +19,9 @@ function getCartSessionId() {
 }
 
 function App() {
+  const [showMyOrders, setShowMyOrders] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState(null);
   const [user, setUser] = useState(() => {
   try {
     return JSON.parse(localStorage.getItem("shopEaseUser")) || null;
@@ -127,6 +132,12 @@ const [showAuth, setShowAuth] = useState(false);
   <a href="#products">Products</a>
   <a href="#cart">Cart</a>
 
+  {user && (
+  <button onClick={() => setShowMyOrders(true)}>
+    My Orders
+  </button>
+)}
+
   {user ? (
     <>
       <span>Hi, {user.name}</span>
@@ -164,6 +175,16 @@ const [showAuth, setShowAuth] = useState(false);
       </section>
 
       <main>
+      {showMyOrders ? (
+  <MyOrders
+    onBack={() => setShowMyOrders(false)}
+  />
+) : (
+  <>
+    {/* Keep all your existing product, cart,
+        checkout, and order-success JSX here. */}
+  </>
+)}
         {error && (
           <p className="error-message" role="alert">
             {error}
@@ -329,20 +350,37 @@ const [showAuth, setShowAuth] = useState(false);
                   {cart.total.toLocaleString("en-IN")}
                 </h3>
 
-                <button
-                  className="primary-button"
-                  onClick={() =>
-                    alert(
-                      "Your cart is ready! Checkout will be implemented next."
-                    )
-                  }
-                >
+                <button className="primary-button" onClick={() => setShowCheckout(true)}>
                   Proceed to Checkout
                 </button>
               </div>
             </>
           )}
         </section>
+        {showCheckout && (
+  <Checkout
+    cart={cart}
+    onCancel={() => setShowCheckout(false)}
+    onSuccess={(order) => {
+      setCompletedOrder(order);
+      setShowCheckout(false);
+      setCart({ items: [], total: 0 });
+    }}
+  />
+)}
+
+{completedOrder && (
+  <section className="order-success">
+    <h2>Order Placed Successfully!</h2>
+    <p>Thank you for shopping with us.</p>
+    <button
+      onClick={() => setCompletedOrder(null)}
+    >
+      Continue Shopping
+    </button>
+  </section>
+)}
+
       </main>
 
       <footer className="footer">
